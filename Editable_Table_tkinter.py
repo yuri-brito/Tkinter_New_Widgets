@@ -1,18 +1,19 @@
 import pandas as pd
-from pandas import DataFrame
+from pandas import DataFrame, concat
 from math import floor,ceil
 from tkinter import *
 from tkinter import ttk
+from requests import put,get, post
 
 
 class EditableTable(Canvas):
     def __init__(self,dataframe,bloquecol ,master=None, cnf={}, **kw):
         Widget.__init__(self, master, 'canvas', cnf, kw)
         self.df=dataframe
-        self.main_frame=Frame(self)
-        self.main_frame.pack(fill=BOTH,expand=True)
-        self.sec_canva=Canvas(self.main_frame)
-        self.sec_canva.grid(row=0,column=0,sticky=N+W+S+E)
+        self.main_frame=Frame(self,bg='blue')
+        self.main_frame.place(x=0,y=0,width=self.winfo_reqwidth(),height=self.winfo_reqheight())
+        self.sec_canva=Canvas(self.main_frame,bg='red')
+        self.sec_canva.grid(row=0,column=0,sticky=N+W+S+E)#tentar usar place e nos scrolls tbm
         self.scrollbar_y=Scrollbar(self.main_frame,command=self.sec_canva.yview)
         self.scrollbar_y.grid(row=0,column=2,rowspan=2,sticky=N+S)
         self.scrollbar_x=Scrollbar(self.main_frame,orient='horizontal',command=self.sec_canva.xview)
@@ -25,11 +26,18 @@ class EditableTable(Canvas):
         Grid.rowconfigure(self.main_frame,1,weight=0)
         Grid.columnconfigure(self.main_frame,0,weight=1)
         Grid.columnconfigure(self.main_frame,1,weight=0)
-        self.frame2=Frame(self.sec_canva)
-        self.sec_canva.create_window(0,0,window=self.frame2, anchor=N)
         self.num_linhas=self.df.shape[0]
         self.num_colunas=self.df.shape[1]
         self.tipos_dados=self.df.dtypes
+        if self.num_linhas<10:
+            self.frame2=Frame(self.sec_canva,bg='yellow')
+            self.sec_canva.create_window(0,0,window=self.frame2, anchor=N,height=280)
+        else:
+            self.frame2=Frame(self.sec_canva,bg='yellow')
+            print(self.scrollbar_y.winfo_vrootx())
+            self.sec_canva.create_window(0,0,window=self.frame2, anchor=N)
+
+
         self.on=False
         self.df_col_canvas=DataFrame(columns=['coluna','tipo_dados','filtro'])
         l=0
@@ -46,11 +54,11 @@ class EditableTable(Canvas):
                 estado='normal'
             soma=0
             contagem=1
-            for x in df.iloc[:,y]:
+            for x in self.df.iloc[:,y]:
                 soma+=len(str(x))
                 contagem+=1
             largura_media=soma/contagem
-            data_tipo=str(self.tipos_dados[df.iloc[:,y].name])
+            data_tipo=str(self.tipos_dados[self.df.iloc[:,y].name])
 
             if 'int' in data_tipo or 'float' in data_tipo:
                 justify='center'
@@ -84,6 +92,7 @@ class EditableTable(Canvas):
                         self.la.bind('<Leave>',lambda event:self.tip_destroy(event))
                         self.la.grid(row=x+1,column=y, sticky=W+E)
 
+
     def update_table(self):
 
         df=DataFrame(data=self.frame2.children, index=[0])
@@ -106,7 +115,6 @@ class EditableTable(Canvas):
                 #df1.loc[l%self.num_linhas,floor(l/self.num_linhas)]=x.cget('text')
             l+=1
         df1.columns=lista_colunas
-        print(df1)
         return df1
 
     def monta_filtro(self,event):
@@ -207,11 +215,13 @@ class EditableTable(Canvas):
 
 
 Mw=Tk()
-df=pd.read_csv('titanic.csv')
-print(df.info())
-table=EditableTable(df,[1],Mw, width=500, height=200)
+
+df1=pd.read_csv('titanic.csv')
+df1.reset_index(drop=True, inplace=True)
+df1=df1.iloc[0:80,:]
+table=EditableTable(df1,[1],Mw,width=800,height=500,bg='green')
 table.pack(padx=10,pady=10)
-table.pack_propagate(0)
+#table.pack_propagate(True)
 btn=Button(Mw,text='yuri', command=table.update_table)
 btn.pack()
 
