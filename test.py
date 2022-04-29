@@ -1,18 +1,17 @@
+from Editable_Table_tkinter import EditableTable
 from tkinter import *
-from tkinter.ttk import *
+import pandas as pd
 
-# creating tkinter window
-root = Tk()
+root=Tk()
+df1=pd.read_csv('titanic.csv')
+df1.reset_index(drop=True, inplace=True)
+df1=df1.iloc[0:8,0:1]
+table=EditableTable(root,df1,[1],width=900,
+                    height=400,y_place=40,x_place=50,
+                    bg='green')
 
-# Adding widgets to the root window
-Label(root, text = 'GeeksforGeeks', font =(
-  'Verdana', 15)).pack(side = TOP, pady = 10)
+btn=Button(root, text='Yuri', command=table.update_table)
 
-# Creating a photoimage object to use image
-photo = PhotoImage(file = r"filtro1.PNG")
 
-# here, image option is used to
-# set image on button
-Button(root, text = 'Click Me !', image = photo, compound='left').pack(side = TOP)
 
 mainloop()

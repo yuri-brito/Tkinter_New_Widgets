@@ -1,23 +1,28 @@
-import pandas as pd
+
 from pandas import DataFrame, concat
 from math import floor,ceil
 from tkinter import *
 from tkinter import ttk
-from traceback import format_exc
+
 
 class EditableTable(Frame):
-    def __init__(self,dataframe,bloquecol ,master=None, cnf={}, **kw):
+    def __init__(self,master,dataframe,bloquecol,dual_color=True,first_color='white',sec_color='light blue',
+                 title_bg_color='lightgrey',x_place=0,y_place=0, cnf={},
+    **kw):
         Widget.__init__(self, master, 'frame', cnf, kw)
         self.master=master
+        self.place(x=x_place,y=y_place)
         self.df=dataframe
+        self.dual_color=dual_color
+        self.first_color=first_color
+        self.sec_color=sec_color
+        self.title_bg_color=title_bg_color
         self.num_linhas=self.df.shape[0]
         self.num_colunas=self.df.shape[1]
         self.tipos_dados=self.df.dtypes
         self.sec_canva=Canvas(self,bg='black')
         self.scrollbar_y=Scrollbar(self,command=self.sec_canva.yview)
-       # self.scrollbar_y.grid(row=0,column=self.num_colunas,rowspan=2,sticky=N+S)
         self.scrollbar_x=Scrollbar(self,orient='horizontal',command=self.sec_canva.xview)
-       # self.scrollbar_x.grid(row=2, column=0,columnspan=self.num_colunas,sticky=W+E)
         self.sec_canva.config(yscrollcommand=self.scrollbar_y.set,xscrollcommand=self.scrollbar_x.set)
         self.frame2=Frame(self.sec_canva,bg='yellow')
         self.sec_canva.create_window(0,0,window=self.frame2, anchor="nw",tags='col')
@@ -25,7 +30,7 @@ class EditableTable(Frame):
         self.filter_on=False
         self.df_col_canvas=DataFrame(columns=['coluna','tipo_dados','filtro'])
         l=0
-        photo=PhotoImage(file=r'filtro1.PNG')
+        #photo=PhotoImage(file=r'filtro1.PNG') future implementation
         for y in range(self.num_colunas):
             col=self.df.columns[y]
             if y in bloquecol:
@@ -47,35 +52,42 @@ class EditableTable(Frame):
             else:
                 justify='left'
 
-            self.tit=Button(self.frame2,text=col,bg='light grey',width=ceil(largura_media))
+            self.tit=Button(self.frame2,text=col,bg=self.title_bg_color,width=ceil(largura_media))
             self.tit.grid(row=0,column=l)
-
             self.tit.bind('<Button-1>',lambda event: self.monta_filtro(event))
             l+=1
 
             for x in range(self.num_linhas):
-                if x==0:
-                    self.la=Entry(self.frame2,bg='light blue',width=ceil(largura_media),justify=justify)
-                    self.la.insert(0,f'{self.df.iloc[x,y]}')
-                    self.la.configure(state=f'{estado}',disabledbackground='light blue')
-                    self.la.bind('<Enter>',lambda event:self.tip_show(event))
-                    self.la.bind('<Leave>',lambda event:self.tip_destroy(event))
-                    self.la.grid(row=x+1,column=y,sticky=W+E)
-                else:
-                    if x%2==0:
-                        self.la=Entry(self.frame2,bg='light blue',width=ceil(largura_media),justify=justify)
+                if dual_color:
+                    if x==0:
+                        self.la=Entry(self.frame2,bg=self.first_color,width=ceil(largura_media),justify=justify)
                         self.la.insert(0,f'{self.df.iloc[x,y]}')
-                        self.la.configure(state=f'{estado}',disabledbackground='light blue')
+                        self.la.configure(state=f'{estado}',disabledbackground=self.first_color)
                         self.la.bind('<Enter>',lambda event:self.tip_show(event))
                         self.la.bind('<Leave>',lambda event:self.tip_destroy(event))
                         self.la.grid(row=x+1,column=y,sticky=W+E)
                     else:
-                        self.la=Entry(self.frame2,bg='white',width=ceil(largura_media),justify=justify)
-                        self.la.insert(0,f'{self.df.iloc[x,y]}')
-                        self.la.configure(state=f'{estado}',disabledbackground='white')
-                        self.la.bind('<Enter>',lambda event:self.tip_show(event))
-                        self.la.bind('<Leave>',lambda event:self.tip_destroy(event))
-                        self.la.grid(row=x+1,column=y,sticky=W+E)
+                        if x%2==0:
+                            self.la=Entry(self.frame2,bg=self.first_color,width=ceil(largura_media),justify=justify)
+                            self.la.insert(0,f'{self.df.iloc[x,y]}')
+                            self.la.configure(state=f'{estado}',disabledbackground=self.first_color)
+                            self.la.bind('<Enter>',lambda event:self.tip_show(event))
+                            self.la.bind('<Leave>',lambda event:self.tip_destroy(event))
+                            self.la.grid(row=x+1,column=y,sticky=W+E)
+                        else:
+                            self.la=Entry(self.frame2,bg=self.sec_color,width=ceil(largura_media),justify=justify)
+                            self.la.insert(0,f'{self.df.iloc[x,y]}')
+                            self.la.configure(state=f'{estado}',disabledbackground=self.sec_color)
+                            self.la.bind('<Enter>',lambda event:self.tip_show(event))
+                            self.la.bind('<Leave>',lambda event:self.tip_destroy(event))
+                            self.la.grid(row=x+1,column=y,sticky=W+E)
+                else:
+                    self.la=Entry(self.frame2,bg=self.first_color,width=ceil(largura_media),justify=justify)
+                    self.la.insert(0,f'{self.df.iloc[x,y]}')
+                    self.la.configure(state=f'{estado}',disabledbackground=self.first_color)
+                    self.la.bind('<Enter>',lambda event:self.tip_show(event))
+                    self.la.bind('<Leave>',lambda event:self.tip_destroy(event))
+                    self.la.grid(row=x+1,column=y,sticky=W+E)
 
         self.master.update_idletasks()
         if self.winfo_reqheight()>self.frame2.winfo_height():
@@ -121,90 +133,90 @@ class EditableTable(Frame):
                 #df1.loc[l%self.num_linhas,floor(l/self.num_linhas)]=x.cget('text')
             l+=1
         df1.columns=lista_colunas
+        print(df1)
         return df1
 
+    def filter_off(self,e):
+        self.canvas_filtro.place_forget()
+        self.filter_on=False
+    def filter_show(self,event):
+
+        if self.tipos_dados[event.widget.cget('text')]=='object':
+            self.canvas_filtro=Canvas(self.master,bd=2,relief='groove')
+            self.canvas_filtro.place(x=event.widget.winfo_rootx()+1,y=event.widget.winfo_rooty()+3,width=200,
+                                     height=10*event.widget.winfo_height())
+            self.canvas_filtro.bind('<Leave>', lambda e : self.filter_off(e))
+            self.frame2.bind('<Configure>', lambda e: self.filter_off(e))
+            self.titulo=Label(self.canvas_filtro,text=f'Filtro em "{event.widget.cget("text")}"',borderwidth=1,relief='solid')
+            self.titulo.place(x=5,y=10,width=190)
+            self.filtro=Entry(self.canvas_filtro)
+            self.filtro.place(x=15,y=40,width=170)
+            self.btn_aplicar=Button(self.canvas_filtro,text='Aplicar')
+            self.btn_aplicar.place(x=25,y=70,width=60)
+            self.btn_limpar=Button(self.canvas_filtro,text='Limpar')
+            self.btn_limpar.place(x=115,y=70,width=60)
+            self.filter_on=True
+
+        if 'int' in str(self.tipos_dados[event.widget.cget('text')]) or 'float' in str(self.tipos_dados[
+            event.widget.cget('text')]):
+            self.canvas_filtro=Canvas(self.master,bd=2,relief='groove')
+            self.canvas_filtro.place(x=event.widget.winfo_rootx()+1,y=event.widget.winfo_rooty()+3,width=200,
+                                     height=10*event.widget.winfo_height())
+            self.canvas_filtro.bind('<Leave>', lambda e : self.filter_off(e))
+            self.frame2.bind('<Configure>', lambda e: self.filter_off(e))
+            self.titulo=Label(self.canvas_filtro,text=f'Filtro em "{event.widget.cget("text")}"',borderwidth=1,relief='solid')
+            self.titulo.place(x=5,y=10,width=190)
+            self.filtro1=Entry(self.canvas_filtro)
+            self.filtro1.place(x=10,y=40,width=30)
+            self.filtro2=Entry(self.canvas_filtro)
+            self.filtro2.place(x=160,y=40,width=30)
+            self.combo1=ttk.Combobox(self.canvas_filtro,values=['=','<','<=','>','>='],state='readonly')
+            self.combo1.place(x=40,y=40,width=40)
+            self.combo2=ttk.Combobox(self.canvas_filtro,values=['=','<','<=','>','>='],state='readonly')
+            self.combo2.place(x=120,y=40,width=40)
+            self.col=Label(self.canvas_filtro,text="X",borderwidth=1,relief='solid')
+            self.col.place(x=90,y=40,width=20)
+            self.btn_aplicar=Button(self.canvas_filtro,text='Aplicar')
+            self.btn_aplicar.place(x=25,y=70,width=60)
+            self.btn_limpar=Button(self.canvas_filtro,text='Limpar')
+            self.btn_limpar.place(x=115,y=70,width=60)
+            self.filter_on=True
+
+        if 'bool' in str(self.tipos_dados[event.widget.cget('text')]):
+            self.canvas_filtro=Canvas(self,bd=2,relief='groove')
+            self.canvas_filtro=Canvas(self.master,bd=2,relief='groove')
+            self.canvas_filtro.place(x=event.widget.winfo_rootx()+1,y=event.widget.winfo_rooty()+3,width=200,
+                                     height=10*event.widget.winfo_height())
+            self.canvas_filtro.bind('<Leave>', lambda e : self.filter_off(e))
+            self.frame2.bind('<Configure>', lambda e: self.filter_off(e))
+            self.titulo=Label(self.canvas_filtro,text=f'Filtro em "{event.widget.cget("text")}"',borderwidth=1,relief='solid')
+            self.titulo.place(x=5,y=10,width=190)
+            self.v1=IntVar()
+            self.v1.set(1)
+            self.radio1=ttk.Checkbutton(self.canvas_filtro,text='Verdadeiro',variable=self.v1)
+            self.radio1.place(x=25,y=40,width=80)
+            self.v2=IntVar()
+            self.v2.set(1)
+            self.radio2=ttk.Checkbutton(self.canvas_filtro,text='Falso',variable=self.v2)
+            self.radio2.place(x=115,y=40,width=70)
+            self.btn_aplicar=Button(self.canvas_filtro,text='Aplicar')
+            self.btn_aplicar.place(x=25,y=70,width=60)
+            self.btn_limpar=Button(self.canvas_filtro,text='Limpar')
+            self.btn_limpar.place(x=115,y=70,width=60)
+            self.filter_on=True
+
     def monta_filtro(self,event):
-        def filter_off(e):
-            self.canvas_filtro.place_forget()
-            self.filter_on=False
-        def filter_on():
-            if self.tipos_dados[event.widget.cget('text')]=='object':
-                self.canvas_filtro=Canvas(self.master,bd=2,relief='groove')
-                self.canvas_filtro.place(x=event.widget.winfo_rootx()+1,y=event.widget.winfo_rooty()+3,width=200,
-                                         height=10*event.widget.winfo_height())
-                self.canvas_filtro.bind('<Leave>', lambda e : filter_off(e))
-                self.frame2.bind('<Configure>', lambda e: filter_off(e))
-                print(self.tipos_dados[event.widget.cget('text')])
-                self.titulo=Label(self.canvas_filtro,text=f'Filtro em "{event.widget.cget("text")}"',borderwidth=1,relief='solid')
-                self.titulo.place(x=5,y=10,width=190)
-                self.filtro=Entry(self.canvas_filtro)
-                self.filtro.place(x=15,y=40,width=170)
-                self.btn_aplicar=Button(self.canvas_filtro,text='Aplicar')
-                self.btn_aplicar.place(x=25,y=70,width=60)
-                self.btn_limpar=Button(self.canvas_filtro,text='Limpar')
-                self.btn_limpar.place(x=115,y=70,width=60)
-                self.filter_on=True
-
-            if 'int' in str(self.tipos_dados[event.widget.cget('text')]) or 'float' in str(self.tipos_dados[
-                event.widget.cget('text')]):
-                self.canvas_filtro=Canvas(self.master,bd=2,relief='groove')
-                self.canvas_filtro.place(x=event.widget.winfo_rootx()+1,y=event.widget.winfo_rooty()+3,width=200,
-                                         height=10*event.widget.winfo_height())
-                self.canvas_filtro.bind('<Leave>', lambda e : filter_off(e))
-                self.frame2.bind('<Configure>', lambda e: filter_off(e))
-                print(self.tipos_dados[event.widget.cget('text')])
-                self.titulo=Label(self.canvas_filtro,text=f'Filtro em "{event.widget.cget("text")}"',borderwidth=1,relief='solid')
-                self.titulo.place(x=5,y=10,width=190)
-                self.filtro1=Entry(self.canvas_filtro)
-                self.filtro1.place(x=10,y=40,width=30)
-                self.filtro2=Entry(self.canvas_filtro)
-                self.filtro2.place(x=160,y=40,width=30)
-                self.combo1=ttk.Combobox(self.canvas_filtro,values=['=','<','<=','>','>='],state='readonly')
-                self.combo1.place(x=40,y=40,width=40)
-                self.combo2=ttk.Combobox(self.canvas_filtro,values=['=','<','<=','>','>='],state='readonly')
-                self.combo2.place(x=120,y=40,width=40)
-                self.col=Label(self.canvas_filtro,text="X",borderwidth=1,relief='solid')
-                self.col.place(x=90,y=40,width=20)
-                self.btn_aplicar=Button(self.canvas_filtro,text='Aplicar')
-                self.btn_aplicar.place(x=25,y=70,width=60)
-                self.btn_limpar=Button(self.canvas_filtro,text='Limpar')
-                self.btn_limpar.place(x=115,y=70,width=60)
-                self.filter_on=True
-
-            if 'bool' in str(self.tipos_dados[event.widget.cget('text')]):
-                self.canvas_filtro=Canvas(self.master,bd=2,relief='groove')
-                self.canvas_filtro.place(x=event.widget.winfo_rootx()+1,y=event.widget.winfo_rooty()+3,width=200,
-                                         height=10*event.widget.winfo_height())
-                self.canvas_filtro.bind('<Leave>', lambda e : filter_off(e))
-                self.frame2.bind('<Configure>', lambda e: filter_off(e))
-                print(self.tipos_dados[event.widget.cget('text')])
-                self.titulo=Label(self.canvas_filtro,text=f'Filtro em "{event.widget.cget("text")}"',borderwidth=1,relief='solid')
-                self.titulo.place(x=5,y=10,width=190)
-                self.v1=IntVar()
-                self.v1.set(1)
-                self.radio1=ttk.Checkbutton(self.canvas_filtro,text='Verdadeiro',variable=self.v1)
-                self.radio1.place(x=25,y=40,width=80)
-                self.v2=IntVar()
-                self.v2.set(1)
-                self.radio2=ttk.Checkbutton(self.canvas_filtro,text='Falso',variable=self.v2)
-                self.radio2.place(x=115,y=40,width=70)
-                self.btn_aplicar=Button(self.canvas_filtro,text='Aplicar')
-                self.btn_aplicar.place(x=25,y=70,width=60)
-                self.btn_limpar=Button(self.canvas_filtro,text='Limpar')
-                self.btn_limpar.place(x=115,y=70,width=60)
-                self.filter_on=True
 
         if self.filter_on:
-            print(event.widget.winfo_rootx())
-            print(self.canvas_filtro.winfo_rootx())
+
             if self.canvas_filtro.winfo_rootx() == event.widget.winfo_rootx()+1:
                 self.canvas_filtro.place_forget()
                 self.filter_on=False
             else:
                 self.canvas_filtro.destroy()
-                filter_on()
+                self.filter_show(event)
         else:
-            filter_on()
+            self.filter_show(event)
 
 
     def tip_show(self,event):
@@ -232,17 +244,4 @@ class EditableTable(Frame):
         largura=event.widget.winfo_width()
         if (len(texto)*5.1)>largura:
             self.la_tip.place_forget()
-
-    def teste(self):
-        print('geometry self '+str(self.winfo_geometry()))
-
-Mw=Tk()
-Mw.state('zoomed')
-df1=pd.read_csv('titanic.csv')
-df1.reset_index(drop=True, inplace=True)
-df1=df1.iloc[0:80,:]
-table=EditableTable(df1,[1],Mw,width=600,height=200,bg='green')
-table.place(x=10,y=10)
-
-
-mainloop()
+'
