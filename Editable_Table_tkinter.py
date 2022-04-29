@@ -244,4 +244,3 @@ class EditableTable(Frame):
         largura=event.widget.winfo_width()
         if (len(texto)*5.1)>largura:
             self.la_tip.place_forget()
-'
